@@ -1680,6 +1680,7 @@ namespace Pk3DSRNGTool
                     Search6();
                 else
                     Search7();
+                UpdateCurrentSlotFormatData();
                 AdjustDGVColumns();
             }
             RNGPool.Clear();
@@ -1687,6 +1688,15 @@ namespace Pk3DSRNGTool
         }
 
         private static Font BoldFont = new Font("Microsoft Sans Serif", 8, FontStyle.Bold);
+        private byte[] slotType;
+        private int[] currentSlotSpeciesList;
+
+        private void UpdateCurrentSlotFormatData() {
+            if (!Gen7 || slotspecies.Length <= 0 || slotspecies[0] > EncounterArea7.SlotType.Length) return;
+            slotType = EncounterArea7.SlotType[slotspecies[0]];
+            currentSlotSpeciesList = (Gen7 && CB_Category.SelectedIndex < 3 ? slotspecies.Skip(1) : slotspecies).Distinct().ToArray();
+        }
+
         private void DGV_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             int index = e.RowIndex;
@@ -1694,6 +1704,15 @@ namespace Pk3DSRNGTool
                 return;
             var result = Frames[index].rt;
             var row = DGV.Rows[index];
+
+            //Slot info
+
+            if (Gen7 && Frames.Count > 0 && Frames[index].Slot != null) {
+                int cSlot = int.Parse(Frames[index].Slot);
+                int slotIndex = slotType[cSlot - (Gen7 ? 1 : 0)] - 1;
+                int specIndex = currentSlotSpeciesList[slotIndex];
+                DGV.Rows[index].Cells[19].ToolTipText = speciestr[specIndex & 0x7FF];
+            }
 
             if (result.Shiny)
                 row.DefaultCellStyle.BackColor = Color.LightCyan;
